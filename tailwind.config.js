@@ -2,7 +2,7 @@
 export default {
   content: [
     "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    "./src/**/*.{js,ts,jsx,tsx}", // 👈 這行很重要，代表要掃描 src 裡面的檔案
   ],
   theme: {
     extend: {},
