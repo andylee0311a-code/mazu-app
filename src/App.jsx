@@ -3,7 +3,7 @@ import { MapPin, Clock, Calendar, ChevronRight, Sparkles, X, Loader2, ZoomIn, Zo
 
 // --- Gemini API 整合設定 ---
 // ⚠️ 注意：如果您要在 Vercel 上執行，請將下方空字串改為 import.meta.env.VITE_GEMINI_API_KEY
-const apiKey = ""; 
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025";
 
 const callGeminiApi = async (prompt) => {
