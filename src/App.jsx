@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Clock, Calendar, ChevronRight, Sparkles, X, Loader2, ZoomIn, ZoomOut, Maximize, Minimize, ChevronUp } from 'lucide-react';
 
 // --- Gemini API 整合設定 ---
-// ⚠️ 注意：如果您要在 Vercel 上執行，請將下方空字串改為 import.meta.env.VITE_GEMINI_API_KEY
+// ✅ 修改後：讓程式去讀取安全變數
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025";
+
+// ✅ 修正點：將模型更改為目前公開 API 支援的正式版模型
+const GEMINI_MODEL = "gemini-2.5-flash";
 
 const callGeminiApi = async (prompt) => {
-  // 自動判斷：如果您有設定 VITE_GEMINI_API_KEY，優先使用您的金鑰
   let activeKey = apiKey;
   try {
     if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_GEMINI_API_KEY) {
@@ -25,7 +26,7 @@ const callGeminiApi = async (prompt) => {
 
   while (retries <= maxRetries) {
     try {
-      console.log(`[API 測試] 正在發送請求... (第 ${retries + 1} 次嘗試)`);
+      console.log(`[API 測試] 正在發送請求... 使用模型: ${GEMINI_MODEL} (第 ${retries + 1} 次嘗試)`);
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -39,7 +40,6 @@ const callGeminiApi = async (prompt) => {
         })
       });
 
-      // 🚨 新增：如果 API 回傳錯誤，把錯誤細節印出來
       if (!response.ok) {
         const errorData = await response.json();
         console.error("❌ API 伺服器回傳錯誤細節:", errorData);
@@ -53,7 +53,7 @@ const callGeminiApi = async (prompt) => {
       console.error(`❌ 請求失敗 (第 ${retries + 1} 次):`, error.message);
       
       if (retries === maxRetries) {
-        return `神明正在休息中 🙏\n(錯誤代碼: ${error.message})\n請按 F12 查看主控台了解詳細錯誤。`;
+        return `神明正在休息中 🙏\n(錯誤代碼: ${error.message})\n請稍後再試。`;
       }
       await new Promise(resolve => setTimeout(resolve, delays[retries]));
       retries++;
