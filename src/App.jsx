@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Clock, Calendar, ChevronRight, Sparkles, X, Loader2, ZoomIn, ZoomOut, Maximize, Minimize, ChevronUp } from 'lucide-react';
 
-// --- Gemini API 整合設定 ---
-const apiKey = ""; // 您填入的 API Key
+// ✅ 修改後：讓程式去讀取安全變數
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025";
 
 const callGeminiApi = async (prompt) => {
