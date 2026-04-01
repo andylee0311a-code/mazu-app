@@ -1,24 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Clock, Calendar, ChevronRight, Sparkles, X, Loader2, ZoomIn, ZoomOut, Maximize, Minimize, ChevronUp } from 'lucide-react';
 
-// ✅ 修改後：讓程式去讀取安全變數
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+// --- Gemini API 整合設定 ---
+// ⚠️ 注意：如果您要在 Vercel 上執行，請將下方空字串改為 import.meta.env.VITE_GEMINI_API_KEY
+const apiKey = ""; 
 const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025";
 
 const callGeminiApi = async (prompt) => {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+  // 自動判斷：如果您有設定 VITE_GEMINI_API_KEY，優先使用您的金鑰
+  let activeKey = apiKey;
+  try {
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_GEMINI_API_KEY) {
+      activeKey = import.meta.env.VITE_GEMINI_API_KEY;
+    }
+  } catch (e) {
+    console.log("非 Vite 環境，使用預設金鑰機制");
+  }
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${activeKey}`;
   
   let retries = 0;
   const maxRetries = 5;
-  const delays = [1000, 2000, 4000, 8000, 16000]; // Exponential backoff delays
+  const delays = [1000, 2000, 4000, 8000, 16000];
 
   while (retries <= maxRetries) {
     try {
+      console.log(`[API 測試] 正在發送請求... (第 ${retries + 1} 次嘗試)`);
       const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           systemInstruction: {
@@ -29,14 +39,21 @@ const callGeminiApi = async (prompt) => {
         })
       });
 
-      if (!response.ok) throw new Error('API 請求失敗');
+      // 🚨 新增：如果 API 回傳錯誤，把錯誤細節印出來
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("❌ API 伺服器回傳錯誤細節:", errorData);
+        throw new Error(errorData.error?.message || `API 錯誤代碼: ${response.status}`);
+      }
       
       const result = await response.json();
       return result.candidates?.[0]?.content?.parts?.[0]?.text || "無法獲取內容，請稍後再試。";
       
     } catch (error) {
+      console.error(`❌ 請求失敗 (第 ${retries + 1} 次):`, error.message);
+      
       if (retries === maxRetries) {
-        return "系統連線異常，神明正在休息中，請稍後再試🙏";
+        return `神明正在休息中 🙏\n(錯誤代碼: ${error.message})\n請按 F12 查看主控台了解詳細錯誤。`;
       }
       await new Promise(resolve => setTimeout(resolve, delays[retries]));
       retries++;
@@ -348,8 +365,6 @@ const itineraryData = [
 
 export default function App() {
   const [activeDay, setActiveDay] = useState(0);
-  
-  // 新增：用來定位行程內容區塊的參考點
   const contentRef = useRef(null);
   
   // 螢幕大小與縮放狀態管理
