@@ -258,8 +258,11 @@ export default function App() {
 
   // 觸發 AI 導覽
   const handleTempleInsight = async (location) => {
-    setAiModal({ isOpen: true, title: `✨ 探索：${location}`, content: "", isLoading: true });
-    const prompt = `身為大甲媽祖遶境的專業導覽員，請基於真實歷史客觀介紹「${location}」。\n請提供正確的：\n1. 主祀神明與宮廟特色\n2. 在大甲媽祖遶境中扮演的角色（例如：停駕點、駐駕點、點心站）。\n請確保資料 100% 正確，絕不捏造虛構事實。`;
+    // 自動過濾掉字尾的動作詞彙，還原乾淨的宮廟名稱
+    const cleanLocation = location.replace(/(起駕|駐駕|停駕)$/, '').trim();
+    
+    setAiModal({ isOpen: true, title: `✨ 探索：${cleanLocation}`, content: "", isLoading: true });
+    const prompt = `身為大甲媽祖遶境的專業導覽員，請基於真實歷史客觀介紹「${cleanLocation}」。\n請提供正確的：\n1. 主祀神明與宮廟特色\n2. 在大甲媽祖遶境中扮演的角色（例如：停駕點、駐駕點、點心站）。\n請確保資料 100% 正確，絕不捏造虛構事實。`;
     const response = await callGeminiApi(prompt);
     setAiModal(prev => ({ ...prev, content: response, isLoading: false }));
   };
